@@ -1,4 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadGatewayException,
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectConnection } from 'nest-knexjs';
@@ -10,30 +16,34 @@ export class UsersService {
   constructor(@InjectConnection() private readonly knex: Knex) {}
 
   async create(createUserDto: CreateUserDto) {
-    const password = await encodePassword(createUserDto.user_password);
-    const newUser = await this.knex('user')
-      .insert({ ...createUserDto, user_password: password })
-      .returning('*');
-
-    // const exists = this.knex('user')
-    //   .where(
-    //     { user_username: createUserDto.user_username } || {
-    //       user_email: createUserDto.user_email,
-    //     },
-    //   )
-    //   .first();
-
-    // if (!!exists) {
-    //   return { error: 'Usuário já existe!' };
-    // } else {
-
-    // }
-
-    return newUser;
+    const exists = await this.knex('user')
+      .where(
+        { user_username: createUserDto.user_username } || {
+          user_email: createUserDto.user_email,
+        },
+      )
+      .first();
+    if (!exists) {
+      try {
+        const password = await encodePassword(createUserDto.user_password);
+        const newUser = await this.knex('user')
+          .insert({ ...createUserDto, user_password: password })
+          .returning('*');
+        return newUser;
+      } catch (err) {
+        throw new Error(err);
+      }
+    } else {
+      throw new HttpException('Este usuário já existe', HttpStatus.BAD_REQUEST);
+    }
   }
 
   async findAll() {
-    return await this.knex.select('*').from('user');
+    try {
+      return await this.knex.select('*').from('user');
+    } catch (err) {
+      throw new Error(err);
+    }
   }
 
   async findOne(id: number) {
@@ -44,9 +54,19 @@ export class UsersService {
         .where({ id: id })
         .returning('*');
 
-      return one;
+      if (one.length === 0) {
+        try {
+        } catch (err) {
+          throw new HttpException(
+            'Não existe nenhum usuário com esse id',
+            HttpStatus.NOT_FOUND,
+          );
+        }
+      } else {
+        return one;
+      }
     } catch (err) {
-      console.log(err);
+      throw new Error(err);
     }
   }
 
@@ -58,8 +78,20 @@ export class UsersService {
         .where({ user_username: username })
         .returning('*');
 
-      return byUser;
-    } catch (err) {}
+      if (byUser.length === 0) {
+        try {
+        } catch (err) {
+          throw new HttpException(
+            'Não existe nenhum usuário com esse nome',
+            HttpStatus.NOT_FOUND,
+          );
+        }
+      } else {
+        return byUser;
+      }
+    } catch (err) {
+      throw new Error(err);
+    }
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
@@ -70,13 +102,17 @@ export class UsersService {
         .where({ id })
         .returning('*');
       return update;
-    } catch (err) {}
+    } catch (err) {
+      throw new Error(err);
+    }
   }
 
   async remove(id: number) {
     try {
       const del = await this.knex.table('user').where({ id }).delete();
       return del;
-    } catch (err) {}
+    } catch (err) {
+      throw new Error(err);
+    }
   }
 }
