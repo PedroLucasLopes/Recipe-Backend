@@ -1,98 +1,29 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateCompleteRecipeDto } from './dto/create-recipe.dto';
 import { UpdateRecipeDto } from './dto/update-recipe.dto';
-import { InjectConnection } from 'nest-knexjs';
-import { Knex } from 'knex';
+import { RecipesReposity } from './recipes.repository';
 
 @Injectable()
 export class RecipesService {
-  constructor(@InjectConnection() private readonly knex: Knex) {}
+  constructor(private readonly recipesRepository: RecipesReposity) {}
 
-  async create(createCompleteRecipeDto: CreateCompleteRecipeDto) {
-    const { recipe_supply, recipes } = createCompleteRecipeDto;
-    const trx = await this.knex.transaction();
-
-    try {
-      const Recipes = await trx.table('recipes').insert(recipes).returning('*');
-      const recipeSupplyData = { ...recipe_supply, id_recipes: Recipes[0].id };
-      const RecipeSupply = await trx
-        .table('recipe_supply')
-        .insert(recipeSupplyData)
-        .returning('*');
-
-      await trx.commit();
-
-      return { recipes: Recipes[0], recipe_supply: RecipeSupply[0] };
-    } catch (err) {
-      trx.rollback();
-      throw new Error(err);
-    }
+  create(createCompleteRecipeDto: CreateCompleteRecipeDto) {
+    return this.recipesRepository.create(createCompleteRecipeDto);
   }
 
-  async findAll() {
-    try {
-      const all = await this.knex
-        .select('rc.*', 'rs.recipe_supplies')
-        .from('recipes as rc')
-        .leftJoin('recipe_supply as rs', 'rs.id_recipes', 'rc.id');
-      return all;
-    } catch (err) {
-      throw new Error(err);
-    }
+  findAll() {
+    return this.recipesRepository.findAll();
   }
 
-  async findOne(id: number) {
-    const one = await this.knex
-      .select('rc.*', 'rs.recipe_supplies')
-      .from('recipes as rc')
-      .where({ 'rc.id': id })
-      .leftJoin('recipe_supply as rs', 'rs.id_recipes', 'rc.id');
-    if (one.length > 0) {
-      try {
-        return one;
-      } catch (err) {
-        throw new Error(err);
-      }
-    } else {
-      throw new HttpException(
-        'Não encontramos resultados para essa receita!',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+  findOne(id: number) {
+    return this.recipesRepository.findOne(id);
   }
 
-  async update(id: number, updateRecipeDto: UpdateRecipeDto) {
-    const { recipe_supply, recipes } = updateRecipeDto;
-    const trx = await this.knex.transaction();
-
-    try {
-      const Recipes = await trx
-        .table('recipes')
-        .update(recipes)
-        .where({ id })
-        .returning('*');
-
-      const RecipeSupply = await trx
-        .table('recipe_supply')
-        .update(recipe_supply)
-        .where({ id_recipe: id })
-        .returning('*');
-
-      await trx.commit();
-
-      return { recipes: Recipes[0], recipe_supply: RecipeSupply[0] };
-    } catch (err) {
-      trx.rollback();
-      throw new Error(err);
-    }
+  update(id: number, updateRecipeDto: UpdateRecipeDto) {
+    return this.recipesRepository.update(id, updateRecipeDto);
   }
 
-  async remove(id: number) {
-    try {
-      const remove = await this.knex('recipes').where({ id }).delete();
-      return { user: remove, message: 'Receita deletada com sucesso!' };
-    } catch (err) {
-      throw new Error(err);
-    }
+  remove(id: number) {
+    return this.recipesRepository.remove(id);
   }
 }
