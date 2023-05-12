@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateCompleteRecipeDto } from './dto/create-recipe.dto';
 import { UpdateRecipeDto } from './dto/update-recipe.dto';
 import { InjectConnection } from 'nest-knexjs';
@@ -24,17 +24,21 @@ export class RecipesService {
 
       return { recipes: Recipes[0], recipe_supply: RecipeSupply[0] };
     } catch (err) {
-      console.log(err);
       trx.rollback();
+      throw new Error(err);
     }
   }
 
   async findAll() {
-    const all = await this.knex
-      .select('rc.*', 'rs.recipe_supplies')
-      .from('recipes as rc')
-      .leftJoin('recipe_supply as rs', 'rs.id_recipes', 'rc.id');
-    return all;
+    try {
+      const all = await this.knex
+        .select('rc.*', 'rs.recipe_supplies')
+        .from('recipes as rc')
+        .leftJoin('recipe_supply as rs', 'rs.id_recipes', 'rc.id');
+      return all;
+    } catch (err) {
+      throw new Error(err);
+    }
   }
 
   async findOne(id: number) {
@@ -43,7 +47,18 @@ export class RecipesService {
       .from('recipes as rc')
       .where({ 'rc.id': id })
       .leftJoin('recipe_supply as rs', 'rs.id_recipes', 'rc.id');
-    return one;
+    if (one.length > 0) {
+      try {
+        return one;
+      } catch (err) {
+        throw new Error(err);
+      }
+    } else {
+      throw new HttpException(
+        'Não encontramos resultados para essa receita!',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 
   async update(id: number, updateRecipeDto: UpdateRecipeDto) {
@@ -67,13 +82,17 @@ export class RecipesService {
 
       return { recipes: Recipes[0], recipe_supply: RecipeSupply[0] };
     } catch (err) {
-      console.log(err);
       trx.rollback();
+      throw new Error(err);
     }
   }
 
   async remove(id: number) {
-    const remove = await this.knex('recipes').where({ id }).delete();
-    return remove;
+    try {
+      const remove = await this.knex('recipes').where({ id }).delete();
+      return { user: remove, message: 'Receita deletada com sucesso!' };
+    } catch (err) {
+      throw new Error(err);
+    }
   }
 }
