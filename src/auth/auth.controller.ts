@@ -6,7 +6,9 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post()
-  signIn(@Body() { name, pass }: { name: string; pass: string }) {
-    return this.authService.signIn(name, pass);
+  signIn(
+    @Body() { username, password }: { username: string; password: string },
+  ) {
+    return this.authService.signIn(username, password);
   }
 }

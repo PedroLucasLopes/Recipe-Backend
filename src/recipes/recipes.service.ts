@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { CreateCompleteRecipeDto } from './dto/create-recipe.dto';
 import { UpdateRecipeDto } from './dto/update-recipe.dto';
-import { RecipesReposity } from './recipes.repository';
+import { RecipesRepository } from './recipes.repository';
 
 @Injectable()
 export class RecipesService {
-  constructor(private readonly recipesRepository: RecipesReposity) {}
+  constructor(private readonly recipesRepository: RecipesRepository) {}
 
   create(createCompleteRecipeDto: CreateCompleteRecipeDto) {
     return this.recipesRepository.create(createCompleteRecipeDto);

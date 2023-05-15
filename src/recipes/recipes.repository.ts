@@ -5,7 +5,7 @@ import { CreateCompleteRecipeDto } from './dto/create-recipe.dto';
 import { UpdateRecipeDto } from './dto/update-recipe.dto';
 
 @Injectable()
-export class RecipesReposity {
+export class RecipesRepository {
   constructor(@InjectConnection() private readonly knex: Knex) {}
 
   public async create(

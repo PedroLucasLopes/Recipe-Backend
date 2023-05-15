@@ -1,24 +1,28 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
+import { UsersRepository } from 'src/users/users.repository';
 
 @Injectable()
 export class AuthService {
-  constructor(private usersService: UsersService) {}
+  constructor(private usersRepository: UsersRepository) {}
 
-  async signIn(name: string, pass: string): Promise<any> {
-    const user = await this.usersService.findOneByUsername(name);
-    const { user_password, ...result } = user[0];
-    const hashCompare = await bcrypt.compare(pass, user_password);
+  async signIn(username: string, password: string): Promise<any> {
+    try {
+      const user = await this.usersRepository.findOneByUsername(username);
+      const { user_password, ...result } = user[0];
+      const hashCompare = await bcrypt.compare(password, user_password);
 
-    if (!hashCompare || result.user_username !== name) {
-      const error = new UnauthorizedException().getResponse();
-      return {
-        message: `Seu usuário ou senha estão errados`,
-        error: error,
-      };
+      if (!hashCompare || result.user_username !== username) {
+        const error = new UnauthorizedException().getResponse();
+        return {
+          message: `Seu usuário ou senha estão errados`,
+          error: error,
+        };
+      } else {
+        return { message: 'Sucesso! Dados corretos!', user: result };
+      }
+    } catch (err) {
+      throw new Error(err);
     }
-
-    return { message: 'Sucesso! Dados corretos!', user: result };
   }
 }
