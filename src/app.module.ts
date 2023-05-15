@@ -4,7 +4,7 @@ import { AppService } from './app.service';
 import { KnexModule } from 'nest-knexjs';
 import { RecipesModule } from './recipes/recipes.module';
 import { UsersModule } from './users/users.module';
-import { AuthModule } from './auth/auth.module';
+import { AuthModule } from './auth/auth/auth.module';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
