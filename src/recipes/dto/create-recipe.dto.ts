@@ -1,14 +1,18 @@
 import { IsObject, IsString } from 'class-validator';
 import { CreateRecipeSupplyDto } from './recipe-supplies.dto';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateRecipeDto {
   @IsString()
+  @ApiProperty()
   recipe_name: string;
 
   @IsString()
+  @ApiProperty()
   recipe_description: string;
 
   @IsString()
+  @ApiProperty()
   recipe_method: string;
 
   constructor(
@@ -24,8 +28,10 @@ export class CreateRecipeDto {
 
 export class CreateCompleteRecipeDto {
   @IsObject()
+  @ApiProperty()
   recipes: CreateRecipeDto;
   @IsObject()
+  @ApiProperty()
   recipe_supply: CreateRecipeSupplyDto;
 
   constructor(recipes: CreateRecipeDto, recipe_supply: CreateRecipeSupplyDto) {
