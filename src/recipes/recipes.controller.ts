@@ -44,7 +44,7 @@ export class RecipesController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a recipe information' })
-  @ApiResponse({ status: 201, description: 'Recipe successfully updated' })
+  @ApiResponse({ status: 200, description: 'Recipe successfully updated' })
   @ApiResponse({ status: 500, description: 'Internal System Error' })
   update(@Param('id') id: string, @Body() updateRecipeDto: UpdateRecipeDto) {
     return this.recipesService.update(+id, updateRecipeDto);
@@ -52,7 +52,7 @@ export class RecipesController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a recipe' })
-  @ApiResponse({ status: 200, description: 'Recipe successfully removed' })
+  @ApiResponse({ status: 204, description: 'Recipe successfully removed' })
   @ApiResponse({ status: 500, description: 'Internal System Error' })
   remove(@Param('id') id: string) {
     return this.recipesService.remove(+id);
